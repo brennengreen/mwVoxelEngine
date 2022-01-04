@@ -87,6 +87,8 @@ void Maxwell::ProcessMousePosition()
 
 void Maxwell::_init_pipelines()
 {
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	vr.Init();
 }
 
 void Maxwell::Run()
@@ -101,7 +103,7 @@ void Maxwell::Run()
 
 		// Render
 		glClearColor(0, 0, 0, 1);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//_shadow_pass();
 		_render_pass();
