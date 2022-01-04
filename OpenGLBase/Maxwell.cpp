@@ -83,6 +83,7 @@ void Maxwell::ProcessScrollState()
 void Maxwell::ProcessMousePosition()
 {
 	_lastOffset = Input::GetMouseOffset();
+	vr.ProcessMousePosition();
 }
 
 void Maxwell::_init_pipelines()

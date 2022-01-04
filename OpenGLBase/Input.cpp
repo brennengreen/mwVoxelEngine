@@ -13,6 +13,12 @@ void Input::Update()
 		if(_keyStates[i] & Input::KeyState::down) _keyStates[i] = Input::KeyState::down;
 	}
 
+	for (unsigned i = 0; i < GLFW_MOUSE_BUTTON_LAST; i++)
+	{
+		if (mouseButtonStates[i] & KeyState::up) mouseButtonStates[i] = KeyState::up;
+		if (mouseButtonStates[i] & KeyState::down) mouseButtonStates[i] = KeyState::down;
+	}
+
 	_scrollOffset = glm::vec2(0);
 	_mousePos = glm::vec2(0);
 	_lastMousePos = glm::vec2(500);
@@ -27,6 +33,7 @@ void Input::init_glfw_input_callbacks(GLFWwindow* window)
 	glfwSetKeyCallback(window, _process_input);
 	glfwSetScrollCallback(window, _scroll_callback);
 	glfwSetCursorPosCallback(window, _mouse_callback);
+	glfwSetMouseButtonCallback(window, _mouse_button_cb);
 }
 
 Input::KeyState Input::GetKeyState(Key key)
@@ -52,6 +59,49 @@ bool Input::IsKeyPressed(Key key)
 bool Input::IsKeyReleased(Key key)
 {
 	return _keyStates[key] & Input::KeyState::released;
+}
+
+bool Input::IsMouseDown(MouseButton key)
+{
+	return mouseButtonStates[key] & KeyState::down;
+}
+
+bool Input::IsMouseUp(MouseButton key)
+{
+	return mouseButtonStates[key] & KeyState::up;
+}
+
+bool Input::IsMousePressed(MouseButton key)
+{
+	return mouseButtonStates[key] == KeyState::pressed;
+}
+
+bool Input::IsMouseReleased(MouseButton key)
+{
+	return mouseButtonStates[key] == KeyState::released;
+}
+
+void Input::_mouse_button_cb(GLFWwindow* window, int button, int action, int mods)
+{
+	//ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+
+	std::cout << button << " " << action << std::endl;
+
+	switch (action)
+	{
+	case GLFW_RELEASE:
+		mouseButtonStates[button] = KeyState::released;
+		break;
+	case GLFW_PRESS:
+		mouseButtonStates[button] = KeyState::pressed;
+		break;
+	case GLFW_REPEAT:
+		mouseButtonStates[button] = KeyState::repeat;
+		break;
+	default:
+		break;
+	}
+
 }
 
 void Input::_mouse_callback(GLFWwindow * window, double xpos, double ypos) {

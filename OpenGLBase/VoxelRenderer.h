@@ -4,7 +4,7 @@
 
 #include "Voxel.h"
 #include "Shader.h"
-
+#include "Camera.h"
 
 #include <vector>
 #include <memory>
@@ -16,7 +16,10 @@ class VoxelRenderer {
 public:
 	VoxelRenderer();
 	void Init();
+	void ProcessMousePosition();
 	~VoxelRenderer();
+
+	Camera cam{};
 
 	void Draw();
 private:
