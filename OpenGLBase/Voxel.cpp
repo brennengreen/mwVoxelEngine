@@ -4,9 +4,9 @@
 
 Voxel::Voxel()
 {
-	m_active = true;
+	double r = ((double) rand() / (RAND_MAX));
+	m_active = r > 0.99 ? true : false;
 	m_blockType = VoxelType_Default;
-	std::cout << "init" << std::endl;
 }
 
 bool Voxel::IsActive()

@@ -88,7 +88,7 @@ void Maxwell::ProcessMousePosition()
 
 void Maxwell::_init_pipelines()
 {
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	vr.Init();
 }
 

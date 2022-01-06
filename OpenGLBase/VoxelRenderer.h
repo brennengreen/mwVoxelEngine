@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 
+#include "Chunk.h"
 #include "Voxel.h"
 #include "Shader.h"
 #include "Camera.h"
@@ -10,8 +11,6 @@
 #include <memory>
 #include <cstdint>
 
-constexpr int MAX_VOXELS = 16;
-
 class VoxelRenderer {
 public:
 	VoxelRenderer();
@@ -19,15 +18,14 @@ public:
 	void ProcessMousePosition();
 	~VoxelRenderer();
 
+	static constexpr GLint MAX_CHUNKS = 4;
+
 	Camera cam{};
 
 	void Draw();
 private:
-	typedef std::vector<std::vector<std::vector<Voxel>>> Grid;
-	std::unique_ptr<Grid> m_pVoxels;
-
-	void m_drawVoxelAt(uint64_t x, uint64_t y, uint64_t z);
+	Chunk ***m_pChunks;
 
 	Shader m_voxelShader;
-	GLuint m_voxelVBO, m_voxelVAO;
+	//GLuint m_voxelVBO, m_voxelVAO;
 };
