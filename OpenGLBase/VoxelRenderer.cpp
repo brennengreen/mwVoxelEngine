@@ -39,7 +39,7 @@ void VoxelRenderer::Init() {
 
     cam.SetCameraView(glm::vec3(0, 0, -(MAX_CHUNKS*Chunk::CHUNK_SIZE*2)), glm::vec3(MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2), glm::vec3(0, 1,0));
 
-	m_voxelShader = Shader("Shaders/voxel.vert", "Shaders/voxel.frag");
+	m_voxelShader = Shader("./Shaders/voxel.vert", "./Shaders/voxel.frag");
 
     m_voxelShader.use();
     glm::mat4 projection = glm::ortho((float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*2, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*2, (float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*2, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*2, 0.1f, 10000.0f);
@@ -84,12 +84,10 @@ void VoxelRenderer::Draw()
     m_voxelShader.setVec3("eye", cam.GetEye());
     m_voxelShader.setMat4("view", view);
 
-    int total_voxels = 0;
-
 	for (int x = 0; x < MAX_CHUNKS; x++) {
     	for (int y = 0; y < MAX_CHUNKS; y++) {
     	    for (int z = 0; z < MAX_CHUNKS; z++) {
-                //std::cout << "drawing " << x << " " << y << " " << z << std::endl; 
+                m_pChunks[x][y][z].Update(0);
 		        m_pChunks[x][y][z].Draw(m_voxelShader, x,y,z);
             }
         }

@@ -7,12 +7,9 @@
 #include "Shader.h"
 #include "imgui.h"
 #include "VoxelRenderer.h"
+#include "MwTypes.h"
 
 #include <memory>
-
-
-struct ImguiConfigurations {
-};
 
 struct Particle {
 	glm::vec2 Position, Velocity;
@@ -28,8 +25,6 @@ public:
 	~Maxwell();
 	void Run();
 	
-	ImguiConfigurations RenderVars;
-
 	void ProcessKeyboardState();
 	void ProcessScrollState();
 	void ProcessMousePosition();

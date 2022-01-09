@@ -4,8 +4,7 @@
 
 Voxel::Voxel()
 {
-	double r = ((double) rand() / (RAND_MAX));
-	m_active = r > 0.0 ? true : false;
+	m_active = false;
 	m_blockType = VoxelType_Default;
 }
 

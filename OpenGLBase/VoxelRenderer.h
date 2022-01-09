@@ -6,6 +6,7 @@
 #include "Voxel.h"
 #include "Shader.h"
 #include "Camera.h"
+#include "MwTypes.h"
 
 #include <vector>
 #include <memory>
@@ -18,7 +19,7 @@ public:
 	void ProcessMousePosition();
 	~VoxelRenderer();
 
-	static constexpr GLint MAX_CHUNKS = 1;
+	static constexpr GLint MAX_CHUNKS = mw::MAX_CHUNKS;
 
 	Camera cam{};
 
@@ -27,5 +28,4 @@ private:
 	Chunk ***m_pChunks;
 
 	Shader m_voxelShader;
-	//GLuint m_voxelVBO, m_voxelVAO;
 };

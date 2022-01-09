@@ -16,6 +16,7 @@ Chunk::Chunk()
 		}
 	}
 
+	GenerateTerrain();
 	CreateMesh();
 }
 
@@ -30,17 +31,11 @@ Chunk::~Chunk()
 	 delete[] m_pVoxels;
 }
 
-void Chunk::CreateMesh()
-{
-	/*auto fnPerlin = FastNoise::New<FastNoise::Perlin>();
-	auto fnFractal = FastNoise::New<FastNoise::FractalFBm>();
-
-	fnFractal->SetSource(fnPerlin);
-	fnFractal->SetOctaveCount(5);*/
-
+void Chunk::GenerateTerrain() {
 	FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("DQAFAAAArkcBQAcAAD0K1z4AAAAAAA==");
+	//FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("EgAFAAAA9ihcPxAAKVwPvwcAAFyPwj4AcT0CQQApXI8+");
+	//FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("CwABAAAAAQAAAAAAAAACAAAAARIABQAAAPYoXD8QAClcD78HAABcj8I+AHE9AkEAKVyPPg==");
 
-	// Create an array of floats to store the noise output in
 	std::vector<float> noiseOutput025f(CHUNK_SIZE * CHUNK_SIZE);
 	std::vector<float> noiseOutput050f(CHUNK_SIZE * CHUNK_SIZE);
 	std::vector<float> noiseOutput100f(CHUNK_SIZE * CHUNK_SIZE);
@@ -68,26 +63,29 @@ void Chunk::CreateMesh()
 
 	int i = 0;
 	for (GLuint x = 0; x < CHUNK_SIZE; x++) {
-		for (GLuint y = 0; y < CHUNK_SIZE; y++) {
+		for (GLuint z = 0; z < CHUNK_SIZE; z++) {
 			float h = 1.f*noiseOutput025f[i] + 0.5f*noiseOutput050f[i] + 0.25f*noiseOutput100f[i];
 			i++;
 			h += 0.50f;
-			h *= CHUNK_SIZE;
-			//float h = (noiseOutput[i++]+.4)* CHUNK_SIZE;
+			h *= CHUNK_SIZE/2;
 			h = (h <= 0) ? 1.f : h;
 			h = (h > CHUNK_SIZE) ? CHUNK_SIZE : h;
-			//AddVoxel(x, h, y);
-			for (GLuint z = 0; z < (int)h; z++) {
-				if (m_pVoxels[x][y][z].IsActive()) {
-					AddVoxel(x, z, y);
-				}
+			for (GLuint y = 0; y < (int)h; y++) {
+				m_pVoxels[x][y][z].SetActive(true);
 			}
-			/*for (GLuint z = 0; z < CHUNK_SIZE; z++) {
+		}
+	}
+}
 
+void Chunk::CreateMesh()
+{
+	for (GLuint x = 0; x < CHUNK_SIZE; x++) {
+		for (GLuint y = 0; y < CHUNK_SIZE; y++) {
+			for (GLuint z = 0; z < CHUNK_SIZE; z++) {
 				if (m_pVoxels[x][y][z].IsActive()) {
 					AddVoxel(x, y, z);
 				}
-			}*/
+			}
 		}
 	}
 
