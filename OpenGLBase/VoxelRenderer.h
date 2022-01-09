@@ -18,7 +18,7 @@ public:
 	void ProcessMousePosition();
 	~VoxelRenderer();
 
-	static constexpr GLint MAX_CHUNKS = 2;
+	static constexpr GLint MAX_CHUNKS = 1;
 
 	Camera cam{};
 

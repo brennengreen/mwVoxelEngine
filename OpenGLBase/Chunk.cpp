@@ -4,6 +4,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <FastNoise/FastNoise.h>
+
 Chunk::Chunk()
 {
 	m_pVoxels = new Voxel **[CHUNK_SIZE];
@@ -30,13 +32,56 @@ Chunk::~Chunk()
 
 void Chunk::CreateMesh()
 {
+	/*auto fnPerlin = FastNoise::New<FastNoise::Perlin>();
+	auto fnFractal = FastNoise::New<FastNoise::FractalFBm>();
+
+	fnFractal->SetSource(fnPerlin);
+	fnFractal->SetOctaveCount(5);*/
+
+	FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("DQAFAAAArkcBQAcAAD0K1z4AAAAAAA==");
+
+	// Create an array of floats to store the noise output in
+	std::vector<float> noiseOutput025f(CHUNK_SIZE * CHUNK_SIZE);
+	std::vector<float> noiseOutput050f(CHUNK_SIZE * CHUNK_SIZE);
+	std::vector<float> noiseOutput100f(CHUNK_SIZE * CHUNK_SIZE);
+
+	fnGenerator->GenUniformGrid2D(
+		noiseOutput025f.data(),
+		0, 0,
+		CHUNK_SIZE, CHUNK_SIZE,
+		0.025f, 1340
+	);
+
+	fnGenerator->GenUniformGrid2D(
+		noiseOutput050f.data(),
+		0, 0,
+		CHUNK_SIZE, CHUNK_SIZE,
+		0.05f, 1340
+	);
+
+	fnGenerator->GenUniformGrid2D(
+		noiseOutput100f.data(),
+		0, 0,
+		CHUNK_SIZE, CHUNK_SIZE,
+		0.1f, 1340
+	);
+
+	int i = 0;
 	for (GLuint x = 0; x < CHUNK_SIZE; x++) {
 		for (GLuint y = 0; y < CHUNK_SIZE; y++) {
-			int h = ((double) rand() / RAND_MAX) * CHUNK_SIZE;
-			AddVoxel(x, h, y);
-			/*for (GLuint z = 0; z < h; z++) {
-				AddVoxel(x, z, y);
-			}*/
+			float h = 1.f*noiseOutput025f[i] + 0.5f*noiseOutput050f[i] + 0.25f*noiseOutput100f[i];
+			i++;
+			h += 0.50f;
+			h *= CHUNK_SIZE;
+			//float h = (noiseOutput[i++]+.4)* CHUNK_SIZE;
+			h = (h <= 0) ? 1.f : h;
+			h = (h > CHUNK_SIZE) ? CHUNK_SIZE : h;
+			//AddVoxel(x, h, y);
+			for (GLuint z = 0; z < (int)h; z++) {
+				if (m_pVoxels[x][y][z].IsActive()) {
+					AddVoxel(x, z, y);
+				}
+			}
 			/*for (GLuint z = 0; z < CHUNK_SIZE; z++) {
 
 				if (m_pVoxels[x][y][z].IsActive()) {
