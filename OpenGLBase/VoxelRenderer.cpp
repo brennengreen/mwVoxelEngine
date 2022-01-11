@@ -37,12 +37,12 @@ void VoxelRenderer::Init() {
 		}
 	}
 
-    cam.SetCameraView(glm::vec3(0, 0, -(MAX_CHUNKS*Chunk::CHUNK_SIZE*2)), glm::vec3(MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2), glm::vec3(0, 1,0));
+    cam.SetCameraView(glm::vec3(0, 0, -(MAX_CHUNKS*Chunk::CHUNK_SIZE*1)), glm::vec3(MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2), glm::vec3(0, 1,0));
 
 	m_voxelShader = Shader("./Shaders/voxel.vert", "./Shaders/voxel.frag");
 
     m_voxelShader.use();
-    glm::mat4 projection = glm::ortho((float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*2, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*2, (float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*2, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*2, 0.1f, 10000.0f);
+    glm::mat4 projection = glm::ortho((float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, 0.1f, 2500.f);
     m_voxelShader.setMat4("projection", projection);
 
     glEnable(GL_DEPTH_TEST);

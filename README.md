@@ -20,7 +20,8 @@
 * [Dear Imgui](https://github.com/ocornut/imgui)
 * [ASSIMP](https://www.assimp.org/)
 * [C++](https://www.cplusplus.com/)
-* [GLFW]
+* [GLFW](https://www.glfw.org/)
+* [FastNoise2](https://github.com/Auburn/FastNoise2)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
