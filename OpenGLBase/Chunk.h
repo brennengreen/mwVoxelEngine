@@ -13,6 +13,8 @@ public:
 	Chunk();
 	~Chunk();
 	void GenerateTerrain();
+	glm::vec3 SurfaceNormal(int i, int j);
+	void ErodeTerrain();
 	void CreateMesh();
 	void AddVoxel(GLuint x, GLuint y, GLuint z, VoxelType type);
 	void Update(float dt);
@@ -20,7 +22,8 @@ public:
 	static constexpr GLint CHUNK_SIZE = mw::CHUNK_SIZE;
 
 private:
-	Voxel ***m_pVoxels;
+	Voxel ***m_pVoxelsRender;
+	float ** m_pHeightMap;
 
 	std::vector<GLfloat> m_vertices;
 	std::vector<unsigned int> m_attributes;

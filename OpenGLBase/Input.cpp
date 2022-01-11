@@ -85,8 +85,6 @@ void Input::_mouse_button_cb(GLFWwindow* window, int button, int action, int mod
 {
 	//ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
 
-	std::cout << button << " " << action << std::endl;
-
 	switch (action)
 	{
 	case GLFW_RELEASE:

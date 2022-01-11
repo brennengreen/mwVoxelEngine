@@ -8,12 +8,17 @@
 
 Chunk::Chunk()
 {
-	m_pVoxels = new Voxel **[CHUNK_SIZE];
+	m_pVoxelsRender = new Voxel **[CHUNK_SIZE];
 	for (int i = 0; i < CHUNK_SIZE; i++) {
-		m_pVoxels[i] = new Voxel * [CHUNK_SIZE];
+		m_pVoxelsRender[i] = new Voxel * [CHUNK_SIZE];
 		for (int j = 0; j < CHUNK_SIZE; j++) {
-			m_pVoxels[i][j] = new Voxel[CHUNK_SIZE];
+			m_pVoxelsRender[i][j] = new Voxel[CHUNK_SIZE];
 		}
+	}
+
+	m_pHeightMap = new float *[CHUNK_SIZE];
+	for (int i = 0; i < CHUNK_SIZE; i++) {
+		m_pHeightMap[i] = new float [CHUNK_SIZE];
 	}
 
 	GenerateTerrain();
@@ -24,11 +29,16 @@ Chunk::~Chunk()
 {
 	 for (int i = 0; i < CHUNK_SIZE; ++i) {
 		for (int j = 0; j < CHUNK_SIZE; ++j) {
-			delete[] m_pVoxels[i][j];
+			delete[] m_pVoxelsRender[i][j];
 		}
-		delete[] m_pVoxels[i];
+		delete[] m_pVoxelsRender[i];
 	 }
-	 delete[] m_pVoxels;
+	 delete[] m_pVoxelsRender;
+
+	  for (int i = 0; i < CHUNK_SIZE; ++i) {
+		delete[] m_pHeightMap[i];
+	 }
+	 delete[] m_pHeightMap;
 }
 
 void Chunk::GenerateTerrain() {
@@ -61,35 +71,93 @@ void Chunk::GenerateTerrain() {
 		0.1f, 1340
 	);
 
-	int i = 0;
+	int j = 0;
+	for (int x = 0; x < CHUNK_SIZE; x++) {
+		for (int z = 0; z < CHUNK_SIZE; z++) {
+			m_pHeightMap[x][z] = 1.f*noiseOutput025f[j] + 0.5f*noiseOutput050f[j] + 0.25f*noiseOutput100f[j];
+			j++;
+		}
+	}
+
+	ErodeTerrain();
+
 	for (GLuint x = 0; x < CHUNK_SIZE; x++) {
 		for (GLuint z = 0; z < CHUNK_SIZE; z++) {
-			float h = 1.f*noiseOutput025f[i] + 0.5f*noiseOutput050f[i] + 0.25f*noiseOutput100f[i];
-			i++;
+			float h = m_pHeightMap[x][z];
 			h += .80f;
 			h *= CHUNK_SIZE/2;
 			h = (h <= 0) ? 1.f : h;
 			h = (h > CHUNK_SIZE) ? CHUNK_SIZE : h;
 			for (GLuint y = 0; y < (int)h; y++) {
-				m_pVoxels[x][y][z].SetActive(true);
+				m_pVoxelsRender[x][y][z].SetActive(true);
 				double tolerance = (((double)rand() / RAND_MAX)*10.f);
-				double snow_height = 0.95*CHUNK_SIZE;
+				double snow_height = 0.6*CHUNK_SIZE;
 				double stone_height = 0.015*CHUNK_SIZE;
 				double stone_percentage = 0.94;
 
 				if (y < stone_height + tolerance || y < stone_height - tolerance) {
-					m_pVoxels[x][y][z].SetVoxelType(VoxelType::VoxelType_Stone);
+					m_pVoxelsRender[x][y][z].SetVoxelType(VoxelType::VoxelType_Stone);
 				} else if (y < snow_height + tolerance || y < snow_height - tolerance) {
 					double r = (double)rand() / RAND_MAX;
 					if (y >= h-2) {
-						m_pVoxels[x][y][z].SetVoxelType(VoxelType::VoxelType_Grass);
+						m_pVoxelsRender[x][y][z].SetVoxelType(VoxelType::VoxelType_Grass);
 					} else {
-						m_pVoxels[x][y][z].SetVoxelType(r < stone_percentage ? VoxelType_Dirt : VoxelType_Stone);
+						m_pVoxelsRender[x][y][z].SetVoxelType(r < stone_percentage ? VoxelType_Dirt : VoxelType_Stone);
 					}
 				}  else {
-					m_pVoxels[x][y][z].SetVoxelType(VoxelType::VoxelType_Snow);
+					m_pVoxelsRender[x][y][z].SetVoxelType(VoxelType::VoxelType_Snow);
 				}
 			}
+		}
+	}
+}
+
+
+glm::vec3 Chunk::SurfaceNormal(int i, int j){
+	float scale = 60.f;
+	glm::vec3 n = glm::vec3(0.15) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[i+1][j]), 1.0, 0.0));  //Positive X
+	n += glm::vec3(0.15) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i-1][j]-m_pHeightMap[i][j]), 1.0, 0.0));  //Negative X
+	n += glm::vec3(0.15) * glm::normalize(glm::vec3(0.0, 1.0, scale*(m_pHeightMap[i][j]-m_pHeightMap[i][j+1])));    //Positive Y
+	n += glm::vec3(0.15) * glm::normalize(glm::vec3(0.0, 1.0, scale*(m_pHeightMap[i][j-1]-m_pHeightMap[i][j])));  //Negative Y
+
+	//Diagonals! (This removes the last spatial artifacts)
+	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[i+1][j+1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[i+1][j+1])/sqrt(2)));    //Positive Y
+	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[i+1][j-1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[i+1][j-1])/sqrt(2)));    //Positive Y
+	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[i-1][j+1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[i-1][j+1])/sqrt(2)));    //Positive Y
+	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[i-1][j-1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[i-1][j-1])/sqrt(2)));    //Positive Y
+
+	return n;
+}
+
+void Chunk::ErodeTerrain() {
+	float dt = 1.2f;
+	int num_particles = 100000;
+	float density = 1.0f;
+	float evapRate = 0.001f;
+	float friction = 0.05f;
+	float depositionRate = 0.1f;
+	float minVolume = 0.01f;
+	for (int i = 0; i < num_particles; i++) {
+		mw::Particle drop(glm::vec2(CHUNK_SIZE*((double)rand() / RAND_MAX), CHUNK_SIZE*((double)rand() / RAND_MAX)));
+		while (drop.volume > minVolume) {
+			glm::ivec2 ipos = drop.pos;
+			if (ipos.x < 1 || ipos.x >= CHUNK_SIZE-1 || ipos.y < 1 || ipos.y >= CHUNK_SIZE-1) break;
+			glm::vec3 n = SurfaceNormal(ipos.x, ipos.y); // surface normal
+			
+			drop.speed += dt*glm::vec2(n.x, n.z)/(drop.volume*density);
+			drop.pos += dt*drop.speed;
+			drop.speed *= (1.0-dt*friction);
+
+			if (drop.pos.x < 1 || drop.pos.x >= CHUNK_SIZE-1 || drop.pos.y < 1 || drop.pos.y >= CHUNK_SIZE-1) break;
+			float c_eq = drop.volume * glm::length(drop.speed)*(m_pHeightMap[ipos.x][ipos.y]-m_pHeightMap[(int)drop.pos.x][(int)drop.pos.y]);
+			if (c_eq < 0.0) c_eq = 0.0;
+
+			float cdiff = c_eq - drop.sediment;
+
+			drop.sediment += dt * depositionRate * cdiff;
+			m_pHeightMap[ipos.x][ipos.y] -= dt * drop.volume * depositionRate * cdiff;
+
+			drop.volume *= (1.0-dt*evapRate);
 		}
 	}
 }
@@ -99,8 +167,8 @@ void Chunk::CreateMesh()
 	for (GLuint x = 0; x < CHUNK_SIZE; x++) {
 		for (GLuint y = 0; y < CHUNK_SIZE; y++) {
 			for (GLuint z = 0; z < CHUNK_SIZE; z++) {
-				if (m_pVoxels[x][y][z].IsActive()) {
-					AddVoxel(x, y, z, m_pVoxels[x][y][z].GetVoxelType());
+				if (m_pVoxelsRender[x][y][z].IsActive()) {
+					AddVoxel(x, y, z, m_pVoxelsRender[x][y][z].GetVoxelType());
 				}
 			}
 		}
