@@ -17,6 +17,7 @@ public:
 	VoxelRenderer();
 	void Init();
 	void ProcessMousePosition();
+	void ProcessScroll(glm::vec2 offset);
 	~VoxelRenderer();
 
 	static constexpr GLint MAX_CHUNKS = mw::MAX_CHUNKS;

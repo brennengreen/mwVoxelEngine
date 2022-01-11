@@ -66,12 +66,29 @@ void Chunk::GenerateTerrain() {
 		for (GLuint z = 0; z < CHUNK_SIZE; z++) {
 			float h = 1.f*noiseOutput025f[i] + 0.5f*noiseOutput050f[i] + 0.25f*noiseOutput100f[i];
 			i++;
-			h += 0.50f;
+			h += .80f;
 			h *= CHUNK_SIZE/2;
 			h = (h <= 0) ? 1.f : h;
 			h = (h > CHUNK_SIZE) ? CHUNK_SIZE : h;
 			for (GLuint y = 0; y < (int)h; y++) {
 				m_pVoxels[x][y][z].SetActive(true);
+				double tolerance = (((double)rand() / RAND_MAX)*10.f);
+				double snow_height = 0.95*CHUNK_SIZE;
+				double stone_height = 0.015*CHUNK_SIZE;
+				double stone_percentage = 0.94;
+
+				if (y < stone_height + tolerance || y < stone_height - tolerance) {
+					m_pVoxels[x][y][z].SetVoxelType(VoxelType::VoxelType_Stone);
+				} else if (y < snow_height + tolerance || y < snow_height - tolerance) {
+					double r = (double)rand() / RAND_MAX;
+					if (y >= h-2) {
+						m_pVoxels[x][y][z].SetVoxelType(VoxelType::VoxelType_Grass);
+					} else {
+						m_pVoxels[x][y][z].SetVoxelType(r < stone_percentage ? VoxelType_Dirt : VoxelType_Stone);
+					}
+				}  else {
+					m_pVoxels[x][y][z].SetVoxelType(VoxelType::VoxelType_Snow);
+				}
 			}
 		}
 	}
@@ -83,7 +100,7 @@ void Chunk::CreateMesh()
 		for (GLuint y = 0; y < CHUNK_SIZE; y++) {
 			for (GLuint z = 0; z < CHUNK_SIZE; z++) {
 				if (m_pVoxels[x][y][z].IsActive()) {
-					AddVoxel(x, y, z);
+					AddVoxel(x, y, z, m_pVoxels[x][y][z].GetVoxelType());
 				}
 			}
 		}
@@ -91,7 +108,7 @@ void Chunk::CreateMesh()
 
 	glGenVertexArrays(1, &m_chunkVAO);
     glGenBuffers(1, &m_chunkVertexBuffer);
-    glGenBuffers(1, &m_chunkNormalBuffer);
+    glGenBuffers(1, &m_chunkAttributeBuffer);
 
     glBindVertexArray(m_chunkVAO);
 
@@ -106,17 +123,22 @@ void Chunk::CreateMesh()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(0);
 
+	GLuint num_attributes = static_cast<GLsizei>(m_attributes.size());
+	GLsizeiptr attributeSize = num_attributes * sizeof(unsigned int);
+	glBindBuffer(GL_ARRAY_BUFFER, m_chunkAttributeBuffer);
+    glBufferData(GL_ARRAY_BUFFER, attributeSize, &m_attributes.front(), GL_STATIC_DRAW);
+
 	// normal attribute
-	GLuint num_normals = static_cast<GLsizei>(m_normals.size());
-	GLsizeiptr normalSize = num_normals * sizeof(unsigned int);
-	glBindBuffer(GL_ARRAY_BUFFER, m_chunkNormalBuffer);
-    glBufferData(GL_ARRAY_BUFFER, normalSize, &m_normals.front(), GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(unsigned int), (void*)0);
+	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 2 * sizeof(unsigned int), (void*)0);
 	glEnableVertexAttribArray(1);
+	
+	// color attribute
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 2 * sizeof(unsigned int), (void*)sizeof(unsigned int));
+	glEnableVertexAttribArray(2);
 
 }
 
-void Chunk::AddVoxel(GLuint x, GLuint y, GLuint z) {
+void Chunk::AddVoxel(GLuint x, GLuint y, GLuint z, VoxelType type) {
 	GLfloat VoxelSize = 1.0f;
 	GLfloat VoxelHalfSize = VoxelSize / 2.0f;
 	GLfloat vertexBufferData[] = {
@@ -166,52 +188,72 @@ void Chunk::AddVoxel(GLuint x, GLuint y, GLuint z) {
 	unsigned verticesArraySize = sizeof(vertexBufferData) / sizeof(GLfloat);
 	m_vertices.insert(m_vertices.end(), &vertexBufferData[0], &vertexBufferData[verticesArraySize]);
 
-	unsigned int normalBufferData[] = {
-		0b0000, // Front (0, 0, 1)
-		0b0000,
-		0b0000,
-		0b0000,
-		0b0000,
-		0b0000,
 
-		0b0001, // Back (0, 0, -1)
-		0b0001, 
-		0b0001, 
-		0b0001, 
-		0b0001, 
-		0b0001, 		 
+	unsigned int color;
+	switch (type) {
+	case VoxelType::VoxelType_Grass:
+		color = 0b0001;
+		break;
+	case VoxelType::VoxelType_Stone:
+		color = 0b0010;
+		break;
+	case VoxelType::VoxelType_Snow:
+		color = 0b0011;
+		break;
+	case VoxelType::VoxelType_Dirt:
+		color = 0b0100;
+		break;
+	default:
+		color = 0b0000;
+		break;
+	}
 
-		0b0010, // Right (1, 0, 0)
-		0b0010,
-		0b0010,
-		0b0010,
-		0b0010,
-		0b0010,
-
-		0b0011, // Left (-1, 0, 0)
-		0b0011,
-		0b0011,
-		0b0011,
-		0b0011,
-		0b0011,
-
-		0b0100, // Top (0, 1, 0)
-		0b0100,
-		0b0100,
-		0b0100,
-		0b0100,
-		0b0100,
-
-		0b0101, // Bottom (0, -1, 0)
-		0b0101,
-		0b0101,
-		0b0101,
-		0b0101,
-		0b0101
+	unsigned int attrBufferData[] = {
+		0b0000, color, // Front (0, 0, 1)
+		0b0000, color,
+		0b0000, color,
+		0b0000, color,
+		0b0000, color,
+		0b0000, color,
+			    
+		0b0001, color, // Back (0, 0, -1)
+		0b0001, color, 
+		0b0001, color, 
+		0b0001, color, 
+		0b0001, color, 
+		0b0001, color, 		 
+			    
+		0b0010, color, // Right (1, 0, 0)
+		0b0010, color,
+		0b0010, color,
+		0b0010, color,
+		0b0010, color,
+		0b0010, color,
+			    
+		0b0011, color, // Left (-1, 0, 0)
+		0b0011, color,
+		0b0011, color,
+		0b0011, color,
+		0b0011, color,
+		0b0011, color,
+			    
+		0b0100, color, // Top (0, 1, 0)
+		0b0100, color,
+		0b0100, color,
+		0b0100, color,
+		0b0100, color,
+		0b0100, color,
+			    
+		0b0101, color, // Bottom (0, -1, 0)
+		0b0101, color,
+		0b0101, color,
+		0b0101, color,
+		0b0101, color,
+		0b0101, color
 	};
 
-	unsigned normalsArraySize = sizeof(normalBufferData) / sizeof(unsigned int);
-	m_normals.insert(m_normals.end(), &normalBufferData[0], &normalBufferData[normalsArraySize]);
+	unsigned attrArraySize = sizeof(attrBufferData) / sizeof(unsigned int);
+	m_attributes.insert(m_attributes.end(), &attrBufferData[0], &attrBufferData[attrArraySize]);
 }
 
 

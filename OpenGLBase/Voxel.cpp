@@ -8,7 +8,7 @@ Voxel::Voxel()
 	m_blockType = VoxelType_Default;
 }
 
-bool Voxel::IsActive()
+bool Voxel::IsActive() const
 {
 	return m_active;
 }
@@ -16,4 +16,14 @@ bool Voxel::IsActive()
 void Voxel::SetActive(const bool active)
 {
 	m_active = active;
+}
+
+VoxelType Voxel::GetVoxelType() const
+{
+	return m_blockType;
+}
+
+void Voxel::SetVoxelType(const VoxelType type)
+{
+	m_blockType = type;
 }

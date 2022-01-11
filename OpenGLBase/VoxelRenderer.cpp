@@ -76,6 +76,10 @@ void VoxelRenderer::ProcessMousePosition() {
     }
 }
 
+void VoxelRenderer::ProcessScroll(glm::vec2 offset)
+{
+}
+
 void VoxelRenderer::Draw()
 {
     m_voxelShader.use();
