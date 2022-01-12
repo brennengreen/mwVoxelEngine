@@ -216,6 +216,8 @@
     </CopyFileToFolders>
     <None Include="Shaders\voxel.frag" />
     <None Include="Shaders\voxel.vert" />
+    <None Include="Shaders\shadow.frag" />
+    <None Include="Shaders\shadow.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

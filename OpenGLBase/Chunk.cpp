@@ -39,6 +39,10 @@ Chunk::~Chunk()
 		delete[] m_pHeightMap[i];
 	 }
 	 delete[] m_pHeightMap;
+
+	 glDeleteVertexArrays(1, &m_chunkVAO);
+	 glDeleteBuffers(1, &m_chunkVertexBuffer);
+	 glDeleteBuffers(1, &m_chunkAttributeBuffer);
 }
 
 void Chunk::GenerateTerrain() {
@@ -54,21 +58,21 @@ void Chunk::GenerateTerrain() {
 		noiseOutput025f.data(),
 		0, 0,
 		CHUNK_SIZE, CHUNK_SIZE,
-		0.025f, 1340
+		0.0125f, 758
 	);
 
 	fnGenerator->GenUniformGrid2D(
 		noiseOutput050f.data(),
 		0, 0,
 		CHUNK_SIZE, CHUNK_SIZE,
-		0.05f, 1340
+		0.025f, 758
 	);
 
 	fnGenerator->GenUniformGrid2D(
 		noiseOutput100f.data(),
 		0, 0,
 		CHUNK_SIZE, CHUNK_SIZE,
-		0.1f, 1340
+		0.05f, 758
 	);
 
 	int j = 0;
@@ -131,7 +135,7 @@ glm::vec3 Chunk::SurfaceNormal(int i, int j){
 
 void Chunk::ErodeTerrain() {
 	float dt = 1.2f;
-	int num_particles = 100000;
+	int num_particles = 250000;
 	float density = 1.0f;
 	float evapRate = 0.001f;
 	float friction = 0.05f;
@@ -338,7 +342,6 @@ void Chunk::Draw(Shader &shader, GLuint x, GLuint y, GLuint z)
 	glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(x*CHUNK_SIZE, y*CHUNK_SIZE, z*CHUNK_SIZE));
     shader.setMat4("model", model);
-	shader.setVec3("lightPos", glm::vec3(CHUNK_SIZE * 5, CHUNK_SIZE * 10, CHUNK_SIZE * 5));
 
 	glDrawArrays(GL_TRIANGLES, 0, m_vertices.size()/3);
 	glBindVertexArray(0);

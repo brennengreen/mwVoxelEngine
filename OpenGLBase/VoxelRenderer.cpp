@@ -80,19 +80,26 @@ void VoxelRenderer::ProcessScroll(glm::vec2 offset)
 {
 }
 
+void VoxelRenderer::ShadowPass()
+{
+}
+
 void VoxelRenderer::Draw()
 {
+    glViewport(0, 0, Application::GetWindowExtent().x, Application::GetWindowExtent().y);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_voxelShader.use();
 
     glm::mat4 view = cam.GetViewMatrix();
     m_voxelShader.setVec3("eye", cam.GetEye());
     m_voxelShader.setMat4("view", view);
+	m_voxelShader.setVec3("lightPos", glm::vec3(mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5, mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5, mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5));
 
 	for (int x = 0; x < MAX_CHUNKS; x++) {
     	for (int y = 0; y < MAX_CHUNKS; y++) {
     	    for (int z = 0; z < MAX_CHUNKS; z++) {
-                m_pChunks[x][y][z].Update(0);
 		        m_pChunks[x][y][z].Draw(m_voxelShader, x,y,z);
+                m_pChunks[x][y][z].Update(0);
             }
         }
     }

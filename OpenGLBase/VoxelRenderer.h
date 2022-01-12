@@ -24,6 +24,7 @@ public:
 
 	Camera cam{};
 
+	void ShadowPass();
 	void Draw();
 private:
 	Chunk ***m_pChunks;

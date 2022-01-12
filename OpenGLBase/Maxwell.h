@@ -17,6 +17,7 @@ public:
 	~Maxwell();
 	void Run();
 	
+
 	void ProcessKeyboardState();
 	void ProcessScrollState();
 	void ProcessMousePosition();
@@ -32,6 +33,7 @@ private:
 
 	glm::vec2 _lastOffset {0, 0};
 
+	void _shadow_pass();
 	void _render_pass();
 	void _imgui_pass();
 };

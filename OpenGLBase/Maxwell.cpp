@@ -47,6 +47,11 @@ void Maxwell::_init_imgui()
 
 
 
+void Maxwell::_shadow_pass()
+{
+	vr.ShadowPass();
+}
+
 void Maxwell::_render_pass()
 {
 	glViewport(0, 0, Application::GetWindowExtent().x, Application::GetWindowExtent().y);
@@ -106,7 +111,7 @@ void Maxwell::Run()
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//_shadow_pass();
+		_shadow_pass();
 		_render_pass();
 		_imgui_pass();
 
