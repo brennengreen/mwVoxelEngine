@@ -34,10 +34,14 @@
 
 ## Examples
 
+
 No Particle Simulated Hydraulic Erosion (16.7 million voxels)
+
 <img style="width:350px;" src="./Media/nosim.png"></img>
 
+
 Hydraulic Erosion Particle Simulaton w/ 150k Particles (16.7 million voxels)
+
 <img style="width:350px;" src="./Media/sim.png"></img>
 
 <!-- CONTACT -->
