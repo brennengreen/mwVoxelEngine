@@ -78,11 +78,13 @@ void Maxwell::_imgui_pass() {
 
 void Maxwell::ProcessKeyboardState()
 {
+	vr.ProcessKeyboardState();
 }
 
 void Maxwell::ProcessScrollState()
 {
 	glm::vec2 scroll_offset = Input::GetScrollOffset();
+	vr.ProcessScroll(scroll_offset);
 }
 
 void Maxwell::ProcessMousePosition()

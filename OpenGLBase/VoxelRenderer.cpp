@@ -37,15 +37,38 @@ void VoxelRenderer::Init() {
 		}
 	}
 
-    cam.SetCameraView(glm::vec3(0, 0, -(MAX_CHUNKS*Chunk::CHUNK_SIZE*1)), glm::vec3(MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2), glm::vec3(0, 1,0));
+    //ACam.SetCameraView(glm::vec3(0, 0, -(MAX_CHUNKS*Chunk::CHUNK_SIZE*1)), glm::vec3(MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2), glm::vec3(0, 1,0));
+    //FCam
 
 	m_voxelShader = Shader("./Shaders/voxel.vert", "./Shaders/voxel.frag");
 
     m_voxelShader.use();
-    glm::mat4 projection = glm::ortho((float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, 0.1f, 2500.f);
+    //glm::mat4 projection = glm::ortho((float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, 0.1f, 2500.f);
+    glm::mat4 projection = FCam.GetProjectionMatrix();
     m_voxelShader.setMat4("projection", projection);
 
     glEnable(GL_DEPTH_TEST);
+}
+
+void VoxelRenderer::ProcessKeyboardState()
+{
+
+	if(Input::IsKeyPressed(GLFW_KEY_W))
+		FCam.ProcessKeyboard(CameraMovement::FORWARD, m_deltaTime);
+	if(Input::IsKeyPressed(GLFW_KEY_A))
+		FCam.ProcessKeyboard(CameraMovement::LEFT, m_deltaTime);
+	if(Input::IsKeyPressed(GLFW_KEY_S))
+		FCam.ProcessKeyboard(CameraMovement::BACKWARD, m_deltaTime);
+	if(Input::IsKeyPressed(GLFW_KEY_D))
+		FCam.ProcessKeyboard(CameraMovement::RIGHT, m_deltaTime);
+    if(Input::IsKeyPressed(GLFW_KEY_UP))
+        FCam.ProcessMouseMovement(0.0f, 1.0f);
+    if(Input::IsKeyPressed(GLFW_KEY_DOWN))
+        FCam.ProcessMouseMovement(0.0f, -1.0f);
+    if(Input::IsKeyPressed(GLFW_KEY_RIGHT))
+        FCam.ProcessMouseMovement(1.0f, 0.0f);
+    if(Input::IsKeyPressed(GLFW_KEY_LEFT))
+        FCam.ProcessMouseMovement(-1.0f, 0.0f);
 }
 
 void VoxelRenderer::ProcessMousePosition() {
@@ -53,8 +76,8 @@ void VoxelRenderer::ProcessMousePosition() {
         glm::vec2 mousePos = Input::GetMousePos();
         glm::vec3 up =  glm::vec3(0, 1, 0);
 
-        glm::vec4 position(cam.GetEye().x, cam.GetEye().y, cam.GetEye().z, 1);
-        glm::vec4 pivot(cam.GetLookAt().x, cam.GetLookAt().y, cam.GetLookAt().z, 1);
+        glm::vec4 position(ACam.GetEye().x, ACam.GetEye().y, ACam.GetEye().z, 1);
+        glm::vec4 pivot(ACam.GetLookAt().x, ACam.GetLookAt().y, ACam.GetLookAt().z, 1);
 
         float deltaAngleX = (2 * glm::pi<double>() / Application::GetWindowExtent().x); 
         float deltaAngleY = (glm::pi<double>() / Application::GetWindowExtent().y);
@@ -68,16 +91,19 @@ void VoxelRenderer::ProcessMousePosition() {
 
         // step 3: Rotate the camera around the pivot point on the second axis.
         glm::mat4x4 rotationMatrixY(1.0f);
-        rotationMatrixY = glm::rotate(rotationMatrixY, yAngle, cam.GetRightVector());
+        rotationMatrixY = glm::rotate(rotationMatrixY, yAngle, ACam.GetRightVector());
         glm::vec3 finalPosition = (rotationMatrixY * (position - pivot)) + pivot;
 
         // Update the camera view (we keep the same lookat and the same up vector)
-        cam.SetCameraView(finalPosition, cam.GetLookAt(), up);
+        ACam.SetCameraView(finalPosition, ACam.GetLookAt(), up);
     }
+
+	//FCam.ProcessMouseMovement(Input::GetMouseOffset().x, Input::GetMouseOffset().y);
 }
 
 void VoxelRenderer::ProcessScroll(glm::vec2 offset)
 {
+    FCam.ProcessMouseScroll(offset.y);
 }
 
 void VoxelRenderer::ShadowPass()
@@ -86,12 +112,15 @@ void VoxelRenderer::ShadowPass()
 
 void VoxelRenderer::Draw()
 {
+    m_currentFrame = glfwGetTime();
+    m_deltaTime = m_currentFrame - m_lastFrame;
+
     glViewport(0, 0, Application::GetWindowExtent().x, Application::GetWindowExtent().y);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_voxelShader.use();
 
-    glm::mat4 view = cam.GetViewMatrix();
-    m_voxelShader.setVec3("eye", cam.GetEye());
+    glm::mat4 view = FCam.GetViewMatrix();
+    m_voxelShader.setVec3("eye", FCam.GetEye());
     m_voxelShader.setMat4("view", view);
 	m_voxelShader.setVec3("lightPos", glm::vec3(mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5, mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5, mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5));
 

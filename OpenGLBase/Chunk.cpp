@@ -135,7 +135,7 @@ glm::vec3 Chunk::SurfaceNormal(int i, int j){
 
 void Chunk::ErodeTerrain() {
 	float dt = 1.2f;
-	int num_particles = 250000;
+	int num_particles = 100000;
 	float density = 1.0f;
 	float evapRate = 0.001f;
 	float friction = 0.05f;
