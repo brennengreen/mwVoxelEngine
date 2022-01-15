@@ -3,8 +3,8 @@
 #include <glm/glm.hpp>
 
 namespace mw {
-	static constexpr int MAX_CHUNKS = 8;
-	static constexpr int CHUNK_SIZE = 32;
+	static constexpr int MAX_CHUNKS = 1;
+	static constexpr int CHUNK_SIZE = 64;
 
 	struct Particle {
 		Particle(glm::vec2 _pos) {pos = _pos;}

@@ -6,6 +6,10 @@
 
 #include <FastNoise/FastNoise.h>
 
+#include <chrono>
+#include <thread>
+
+
 Chunk::Chunk()
 {
 	m_pVoxelsRender = new Voxel **[CHUNK_SIZE];
@@ -23,6 +27,8 @@ Chunk::Chunk()
 
 	GenerateTerrain();
 	CreateMesh();
+
+	m_updating = false;
 }
 
 Chunk::~Chunk()
@@ -83,8 +89,12 @@ void Chunk::GenerateTerrain() {
 		}
 	}
 
-	ErodeTerrain();
+	//ErodeTerrain();
+	GenerateFromHeightMap();
+	
+}
 
+void Chunk::GenerateFromHeightMap() {
 	for (GLuint x = 0; x < CHUNK_SIZE; x++) {
 		for (GLuint z = 0; z < CHUNK_SIZE; z++) {
 			float h = m_pHeightMap[x][z];
@@ -119,23 +129,28 @@ void Chunk::GenerateTerrain() {
 
 glm::vec3 Chunk::SurfaceNormal(int i, int j){
 	float scale = 60.f;
-	glm::vec3 n = glm::vec3(0.15) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[i+1][j]), 1.0, 0.0));  //Positive X
-	n += glm::vec3(0.15) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i-1][j]-m_pHeightMap[i][j]), 1.0, 0.0));  //Negative X
-	n += glm::vec3(0.15) * glm::normalize(glm::vec3(0.0, 1.0, scale*(m_pHeightMap[i][j]-m_pHeightMap[i][j+1])));    //Positive Y
-	n += glm::vec3(0.15) * glm::normalize(glm::vec3(0.0, 1.0, scale*(m_pHeightMap[i][j-1]-m_pHeightMap[i][j])));  //Negative Y
+	auto iplus1 = i+1 >= CHUNK_SIZE ? i : i+1;
+	auto iminus1 = i-1 < 0 ? i : i-1;
+	auto jplus1 = j+1 >= CHUNK_SIZE ? j : j+1;
+	auto jminus1 = j-1 < 0 ? j : j-1;
+	glm::vec3 n = glm::vec3(0.15) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[iplus1][j]), 1.0, 0.0));  //Positive X
+	n += glm::vec3(0.15) * glm::normalize(glm::vec3(scale*(m_pHeightMap[iminus1][j]-m_pHeightMap[i][j]), 1.0, 0.0));  //Negative X
+	n += glm::vec3(0.15) * glm::normalize(glm::vec3(0.0, 1.0, scale*(m_pHeightMap[i][j]-m_pHeightMap[i][jplus1])));    //Positive Y
+	n += glm::vec3(0.15) * glm::normalize(glm::vec3(0.0, 1.0, scale*(m_pHeightMap[i][jminus1]-m_pHeightMap[i][j])));  //Negative Y
 
 	//Diagonals! (This removes the last spatial artifacts)
-	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[i+1][j+1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[i+1][j+1])/sqrt(2)));    //Positive Y
-	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[i+1][j-1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[i+1][j-1])/sqrt(2)));    //Positive Y
-	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[i-1][j+1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[i-1][j+1])/sqrt(2)));    //Positive Y
-	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[i-1][j-1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[i-1][j-1])/sqrt(2)));    //Positive Y
+	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[iplus1][jplus1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[iplus1][jplus1])/sqrt(2)));    //Positive Y
+	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[iplus1][jminus1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[iplus1][jminus1])/sqrt(2)));    //Positive Y
+	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[iminus1][jplus1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[iminus1][jplus1])/sqrt(2)));    //Positive Y
+	n += glm::vec3(0.1) * glm::normalize(glm::vec3(scale*(m_pHeightMap[i][j]-m_pHeightMap[iminus1][jminus1])/sqrt(2), sqrt(2), scale*(m_pHeightMap[i][j]-m_pHeightMap[iminus1][jminus1])/sqrt(2)));    //Positive Y
 
 	return n;
 }
 
 void Chunk::ErodeTerrain() {
-	float dt = 1.2f;
-	int num_particles = 100000;
+	float dt = 1.5;
+	int num_particles = 10000;
+	m_particlesToSimulate -= num_particles;
 	float density = 1.0f;
 	float evapRate = 0.001f;
 	float friction = 0.05f;
@@ -145,14 +160,14 @@ void Chunk::ErodeTerrain() {
 		mw::Particle drop(glm::vec2(CHUNK_SIZE*((double)rand() / RAND_MAX), CHUNK_SIZE*((double)rand() / RAND_MAX)));
 		while (drop.volume > minVolume) {
 			glm::ivec2 ipos = drop.pos;
-			if (ipos.x < 1 || ipos.x >= CHUNK_SIZE-1 || ipos.y < 1 || ipos.y >= CHUNK_SIZE-1) break;
+			if (ipos.x < 0 || ipos.x > CHUNK_SIZE-1 || ipos.y < 0 || ipos.y > CHUNK_SIZE-1) break;
 			glm::vec3 n = SurfaceNormal(ipos.x, ipos.y); // surface normal
 			
 			drop.speed += dt*glm::vec2(n.x, n.z)/(drop.volume*density);
 			drop.pos += dt*drop.speed;
 			drop.speed *= (1.0-dt*friction);
 
-			if (drop.pos.x < 1 || drop.pos.x >= CHUNK_SIZE-1 || drop.pos.y < 1 || drop.pos.y >= CHUNK_SIZE-1) break;
+			if (drop.pos.x < 0 || drop.pos.x > CHUNK_SIZE-1 || drop.pos.y < 0 || drop.pos.y > CHUNK_SIZE-1) break;
 			float c_eq = drop.volume * glm::length(drop.speed)*(m_pHeightMap[ipos.x][ipos.y]-m_pHeightMap[(int)drop.pos.x][(int)drop.pos.y]);
 			if (c_eq < 0.0) c_eq = 0.0;
 
@@ -168,6 +183,8 @@ void Chunk::ErodeTerrain() {
 
 void Chunk::CreateMesh()
 {
+	m_vertices.clear();
+	m_attributes.clear();
 	for (GLuint x = 0; x < CHUNK_SIZE; x++) {
 		for (GLuint y = 0; y < CHUNK_SIZE; y++) {
 			for (GLuint z = 0; z < CHUNK_SIZE; z++) {
@@ -329,8 +346,31 @@ void Chunk::AddVoxel(GLuint x, GLuint y, GLuint z, VoxelType type) {
 }
 
 
+void Chunk::AsyncBuildMesh() {
+	std::cout << "Updating Mesh" << std::endl;
+
+	for (GLuint x = 0; x < CHUNK_SIZE; x++) {
+		for (GLuint y = 0; y < CHUNK_SIZE; y++) {
+			for (GLuint z = 0; z < CHUNK_SIZE; z++) {
+				m_pVoxelsRender[x][y][z].SetActive(false);
+			}
+		}
+	}
+
+	ErodeTerrain();
+	GenerateFromHeightMap();
+	CreateMesh();
+	std::cout << "Finished Update" << std::endl;
+	m_updating = false;
+}
+
 void Chunk::Update(float dt)
 {
+	if (!m_updating && m_particlesToSimulate > 0) {
+		m_updating = true;
+		worker = std::thread([this](){this->AsyncBuildMesh();});
+		worker.detach();
+	}
 }
 
 void Chunk::Draw(Shader &shader, GLuint x, GLuint y, GLuint z)

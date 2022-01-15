@@ -134,7 +134,6 @@ void Input::_process_input(GLFWwindow* window, int key, int scancode, int action
 	io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
 	io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];*/
 
-	std::cout << key << std::endl;
 	if(key != GLFW_KEY_UNKNOWN)
 	{
 	switch(action)

@@ -38,7 +38,7 @@ void VoxelRenderer::Init() {
 	}
 
     //ACam.SetCameraView(glm::vec3(0, 0, -(MAX_CHUNKS*Chunk::CHUNK_SIZE*1)), glm::vec3(MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2), glm::vec3(0, 1,0));
-    //FCam
+    FCam = FlyCamera(glm::vec3(32.8191, 124.612, 191.457));
 
 	m_voxelShader = Shader("./Shaders/voxel.vert", "./Shaders/voxel.frag");
 
@@ -122,13 +122,14 @@ void VoxelRenderer::Draw()
     glm::mat4 view = FCam.GetViewMatrix();
     m_voxelShader.setVec3("eye", FCam.GetEye());
     m_voxelShader.setMat4("view", view);
+
 	m_voxelShader.setVec3("lightPos", glm::vec3(mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5, mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5, mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5));
 
 	for (int x = 0; x < MAX_CHUNKS; x++) {
     	for (int y = 0; y < MAX_CHUNKS; y++) {
     	    for (int z = 0; z < MAX_CHUNKS; z++) {
 		        m_pChunks[x][y][z].Draw(m_voxelShader, x,y,z);
-                m_pChunks[x][y][z].Update(0);
+                m_pChunks[x][y][z].Update(m_deltaTime);
             }
         }
     }
