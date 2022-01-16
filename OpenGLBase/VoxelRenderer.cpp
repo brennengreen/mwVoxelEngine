@@ -37,14 +37,14 @@ void VoxelRenderer::Init() {
 		}
 	}
 
-    //ACam.SetCameraView(glm::vec3(0, 0, -(MAX_CHUNKS*Chunk::CHUNK_SIZE*1)), glm::vec3(MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2), glm::vec3(0, 1,0));
+    ACam.SetCameraView(glm::vec3(0, 0, -(MAX_CHUNKS*Chunk::CHUNK_SIZE*1)), glm::vec3(MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2, MAX_CHUNKS*Chunk::CHUNK_SIZE/2), glm::vec3(0, 1,0));
     FCam = FlyCamera(glm::vec3(32.8191, 124.612, 191.457));
 
 	m_voxelShader = Shader("./Shaders/voxel.vert", "./Shaders/voxel.frag");
 
     m_voxelShader.use();
-    //glm::mat4 projection = glm::ortho((float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, 0.1f, 2500.f);
-    glm::mat4 projection = FCam.GetProjectionMatrix();
+    glm::mat4 projection = glm::ortho((float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)-MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, (float)MAX_CHUNKS*Chunk::CHUNK_SIZE*1.5f, 0.1f, 2500.f);
+    //glm::mat4 projection = FCam.GetProjectionMatrix();
     m_voxelShader.setMat4("projection", projection);
 
     glEnable(GL_DEPTH_TEST);
@@ -119,8 +119,8 @@ void VoxelRenderer::Draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_voxelShader.use();
 
-    glm::mat4 view = FCam.GetViewMatrix();
-    m_voxelShader.setVec3("eye", FCam.GetEye());
+    glm::mat4 view = ACam.GetViewMatrix();
+    m_voxelShader.setVec3("eye", ACam.GetEye());
     m_voxelShader.setMat4("view", view);
 
 	m_voxelShader.setVec3("lightPos", glm::vec3(mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5, mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5, mw::MAX_CHUNKS * mw::CHUNK_SIZE * 1.5));

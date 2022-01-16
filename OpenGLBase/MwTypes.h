@@ -4,7 +4,7 @@
 
 namespace mw {
 	static constexpr int MAX_CHUNKS = 1;
-	static constexpr int CHUNK_SIZE = 64;
+	static constexpr int CHUNK_SIZE = 256;
 
 	struct Particle {
 		Particle(glm::vec2 _pos) {pos = _pos;}

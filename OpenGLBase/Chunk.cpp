@@ -149,7 +149,7 @@ glm::vec3 Chunk::SurfaceNormal(int i, int j){
 
 void Chunk::ErodeTerrain() {
 	float dt = 1.5;
-	int num_particles = 10000;
+	int num_particles = 15000;
 	m_particlesToSimulate -= num_particles;
 	float density = 1.0f;
 	float evapRate = 0.001f;
@@ -185,6 +185,7 @@ void Chunk::CreateMesh()
 {
 	m_vertices.clear();
 	m_attributes.clear();
+
 	for (GLuint x = 0; x < CHUNK_SIZE; x++) {
 		for (GLuint y = 0; y < CHUNK_SIZE; y++) {
 			for (GLuint z = 0; z < CHUNK_SIZE; z++) {
@@ -359,13 +360,23 @@ void Chunk::AsyncBuildMesh() {
 
 	ErodeTerrain();
 	GenerateFromHeightMap();
-	CreateMesh();
-	std::cout << "Finished Update" << std::endl;
+
 	m_updating = false;
+	m_readyToRender = true;
 }
 
 void Chunk::Update(float dt)
 {
+	if (m_readyToRender) {
+		// Cleanup VA/BO's before creating new mesh
+		glDeleteVertexArrays(1, &m_chunkVAO);
+		glDeleteBuffers(1, &m_chunkVertexBuffer);
+		glDeleteBuffers(1, &m_chunkAttributeBuffer);
+
+		CreateMesh();
+
+		m_readyToRender = false;
+	}
 	if (!m_updating && m_particlesToSimulate > 0) {
 		m_updating = true;
 		worker = std::thread([this](){this->AsyncBuildMesh();});

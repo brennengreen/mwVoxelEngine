@@ -31,7 +31,7 @@ private:
 
 	bool m_readyToRender = false;
 	bool m_updating = true;
-	int m_particlesToSimulate = 150000;
+	int m_particlesToSimulate = 300000;
 
 	std::thread worker;
 
